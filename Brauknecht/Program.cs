@@ -1,4 +1,6 @@
 ﻿using System;
+using System.IO;
+using static Brauknecht.Maischautomatik;
 
 namespace Brauknecht
 {
@@ -7,37 +9,45 @@ namespace Brauknecht
         static void Main(string[] args)
         {
             Maischen();
-            Kochen();
+            //Kochen();
         }
 
         private static void Maischen()
         {
             Console.WriteLine("Maischautomatik");
-            
-            var m = new Maischautomatik();
-            m.Einmaischen(70.0);
+
+            var prg = new Maischprogramm
+            {
+                EinmaischTemperatur = 70, 
+                Rasten = new[]
+                {
+                    new Rast(66, 60),
+                    new Rast(72, 30)
+                }
+            };
+
+            var m = new Maischautomatik(prg);
+
+            m.Einmaischen();
             m.EinmaischenTemperaturErreicht();
 
-            Rast(66, 60);
-            Rast(72.0, 30);
-
-            m.Abmaischen();
-            m.AbmaischTemperaturErreicht();
-
-            //Console.WriteLine(m.ToDotGraph());
-
-            void Rast(double temp, int dauer)
+            foreach (var _ in prg.Rasten)
             {
-                m.Rasten(temp, dauer);
+                m.Rasten();
                 m.RastTemperaturErreicht();
                 m.RastWartenErreicht();
             }
+
+            m.Abmaischen();
+            m.AbmaischTemperaturErreicht();
+            
+            // Console.WriteLine(m.ToDotGraph());
         }
 
         private static void Kochen()
         {
             Console.WriteLine("Kochautomatik");
-            
+
             var k = new Kochautomatik(60);
             k.VorderwürzeGegeben();
             k.Kochen();
@@ -50,7 +60,7 @@ namespace Brauknecht
             k.KochEndeErreicht();
 
             //Console.WriteLine(k.ToDotGraph());
-            
+
             void Hopfengabe(int dauer)
             {
                 k.Hopfengabe(dauer);

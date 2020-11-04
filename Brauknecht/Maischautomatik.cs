@@ -4,8 +4,10 @@ using Stateless.Graph;
 
 namespace Brauknecht
 {
-    public class Maischautomatik
+    public partial class Maischautomatik
     {
+        private readonly Maischprogramm _maischprogramm;
+
         private enum Trigger
         {
             EinmaischenStart,
@@ -21,7 +23,6 @@ namespace Brauknecht
         {
             Aus,
             EinmaischenAufheizen,
-            EinmaischenFertig,
             RastAufheizen,
             RastWarten,
             RastFertig,
@@ -30,38 +31,28 @@ namespace Brauknecht
 
         private State _state = State.Aus;
         readonly StateMachine<State, Trigger> _machine;
-        private readonly StateMachine<State, Trigger>.TriggerWithParameters<double> _setEinmaischenTrigger;
-        private readonly StateMachine<State, Trigger>.TriggerWithParameters<double, int> _setRastTrigger;
-        private readonly StateMachine<State, Trigger>.TriggerWithParameters<double> _setAbmaischenTrigger;
 
         private double _tempSoll;
         private int _dauerSoll;
+        private int _index;
 
-        public Maischautomatik()
+        public Maischautomatik(Maischprogramm maischprogramm)
         {
-            _machine = new StateMachine<State, Trigger>(() => _state, s => _state = s);
+            _maischprogramm = maischprogramm;
 
-            _setEinmaischenTrigger = _machine.SetTriggerParameters<double>(Trigger.EinmaischenStart);
-            _setRastTrigger = _machine.SetTriggerParameters<double, int>(Trigger.RastAufheizenStart);
-            _setAbmaischenTrigger = _machine.SetTriggerParameters<double>(Trigger.AbmaischenStart);
+            _machine = new StateMachine<State, Trigger>(() => _state, s => _state = s);
 
             _machine.Configure(State.Aus)
                 .Permit(Trigger.EinmaischenStart, State.EinmaischenAufheizen);
 
             _machine.Configure(State.EinmaischenAufheizen)
-                .OnEntryFrom(_setEinmaischenTrigger, temp => OnEinmaischenAufheizen(temp),
-                    "Aufheiztemperatur")
                 .OnEntry(OnEinmaischenAufheizen)
-                .Permit(Trigger.EinmaischenTemperaturErreicht, State.EinmaischenFertig);
-
-            _machine.Configure(State.EinmaischenFertig)
-                .OnEntry(OnEinmaischenFertig)
-                .Permit(Trigger.RastAufheizenStart, State.RastAufheizen);
+                .OnExit(OnEinmaischenFertig)
+                .Permit(Trigger.EinmaischenTemperaturErreicht, State.RastAufheizen);
 
             _machine.Configure(State.RastAufheizen)
-                .OnEntryFrom(_setRastTrigger, (temp, dauer) => OnRast(temp, dauer),
-                    "Temperatur und Dauer der Rast")
-                .OnEntry(OnRastAufheizen)
+                .OnEntry(() => OnRast(_index++))
+                .Ignore(Trigger.RastAufheizenStart)
                 .Permit(Trigger.RastTemperaturErreicht, State.RastWarten);
 
             _machine.Configure(State.RastWarten)
@@ -74,33 +65,25 @@ namespace Brauknecht
                 .Permit(Trigger.AbmaischenStart, State.AbmaischenAufheizen);
 
             _machine.Configure(State.AbmaischenAufheizen)
-                .OnEntryFrom(_setAbmaischenTrigger, temp => OnAbmaischenAufheizen(temp),
-                    "Abmaischtemperatur")
                 .OnEntry(OnAbmaischenAufheizen)
                 .OnExit(OnAbmaischenFertig)
                 .Permit(Trigger.AbmaischTemperaturErreicht, State.Aus);
 
-            _machine.OnTransitioned(t =>
-                Console.WriteLine(
-                    $"OnTransitioned: {t.Source} -> {t.Destination} via {t.Trigger}({string.Join(", ", t.Parameters)})"));
-        }
-        
-        // Einmaischen
-        public void Einmaischen(double temp)
-        {
-            _machine.Fire(_setEinmaischenTrigger, temp);
+            // _machine.OnTransitioned(t =>
+            //     Console.WriteLine(
+            //         $"OnTransitioned: {t.Source} -> {t.Destination} via {t.Trigger}({string.Join(", ", t.Parameters)})"));
         }
 
-        private void OnEinmaischenAufheizen(in double temp)
+        // Einmaischen
+        public void Einmaischen()
         {
-            _tempSoll = temp;
-            Console.WriteLine($"Setze Einmaischen auf {_tempSoll}°C");
+            _machine.Fire(Trigger.EinmaischenStart);
         }
 
         private void OnEinmaischenAufheizen()
         {
-            // ReSharper disable once StringLiteralTypo
-            Console.WriteLine("Einmaisching...");
+            _tempSoll = _maischprogramm.EinmaischTemperatur;
+            Console.WriteLine($"Setze Einmaischen auf {_tempSoll}°C");
         }
 
         public void EinmaischenTemperaturErreicht()
@@ -112,24 +95,19 @@ namespace Brauknecht
         {
             Console.WriteLine("Eingemaischt!");
         }
-        
-        
+
+
         // Rasten
-        public void Rasten(double temp, int dauer)
+        public void Rasten()
         {
-            _machine.Fire(_setRastTrigger, temp, dauer);
+            _machine.Fire(Trigger.RastAufheizenStart);
         }
 
-        private void OnRast(in double temp, in int dauer)
+        private void OnRast(int index)
         {
-            _tempSoll = temp;
-            _dauerSoll = dauer;
+            _tempSoll = _maischprogramm.Rasten[index].Temperatur;
+            _dauerSoll = _maischprogramm.Rasten[index].Dauer;
             Console.WriteLine($"Definiere Rast: {_tempSoll}°C, {_dauerSoll} min");
-        }
-
-        private void OnRastAufheizen()
-        {
-            Console.WriteLine($"Rasttemperatur auf {_tempSoll}°C aufheizen...");
         }
 
         public void RastTemperaturErreicht()
@@ -156,21 +134,15 @@ namespace Brauknecht
         // Abmaischen
         //
 
-        public void Abmaischen(double temp = 78.0)
+        public void Abmaischen()
         {
-            _machine.Fire(_setAbmaischenTrigger, temp);
-        }
-
-        private void OnAbmaischenAufheizen(in double temp)
-        {
-            _tempSoll = temp;
-            Console.WriteLine($"Setze Abmaischen auf {_tempSoll}°C");
+            _machine.Fire(Trigger.AbmaischenStart);
         }
 
         private void OnAbmaischenAufheizen()
         {
-            // ReSharper disable once StringLiteralTypo
-            Console.WriteLine("Abmaisching...");
+            _tempSoll = _maischprogramm.Abmaischtemperatur;
+            Console.WriteLine($"Setze Abmaischen auf {_tempSoll}°C");
         }
 
         public void AbmaischTemperaturErreicht()
