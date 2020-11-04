@@ -4,7 +4,7 @@ using Stateless.Graph;
 
 namespace Brauknecht
 {
-    public partial class Maischautomatik
+    public class Maischautomatik
     {
         private readonly Maischprogramm _maischprogramm;
 

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using static Brauknecht.Maischautomatik;
 
 namespace Brauknecht
@@ -9,7 +8,7 @@ namespace Brauknecht
         static void Main(string[] args)
         {
             Maischen();
-            //Kochen();
+            Kochen();
         }
 
         private static void Maischen()
@@ -48,24 +47,32 @@ namespace Brauknecht
         {
             Console.WriteLine("Kochautomatik");
 
-            var k = new Kochautomatik(60);
+            var prg = new Kochprogramm
+            {
+                Kochdauer = 60, 
+                Hopfengaben = new[]
+                {
+                    new Hopfengabe("Magnum", 50),
+                    new Hopfengabe("Amarillo", 30),
+                    new Hopfengabe("Simcoe", 5)
+                }
+            };
+            
+            var k = new Kochautomatik(prg);
+            
             k.VorderwürzeGegeben();
             k.Kochen();
             k.KochTemperaturErreicht();
 
-            Hopfengabe(50);
-            Hopfengabe(30);
-            Hopfengabe(5);
+            foreach (var _ in prg.Hopfengaben)
+            {
+                k.Hopfengabe();
+                k.HopengabeErreicht();
+            }
 
             k.KochEndeErreicht();
 
             //Console.WriteLine(k.ToDotGraph());
-
-            void Hopfengabe(int dauer)
-            {
-                k.Hopfengabe(dauer);
-                k.HopengabeErreicht();
-            }
         }
     }
 }

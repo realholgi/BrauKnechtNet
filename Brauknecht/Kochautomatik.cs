@@ -6,6 +6,8 @@ namespace Brauknecht
 {
     public class Kochautomatik
     {
+        private readonly Kochprogramm _kochprogramm;
+
         private enum Trigger
         {
             VorderwürzeGegeben,
@@ -27,21 +29,18 @@ namespace Brauknecht
 
         private State _state = State.Aus;
         private readonly StateMachine<State, Trigger> _machine;
-        private readonly StateMachine<State, Trigger>.TriggerWithParameters<int> _setHopfengabeTrigger;
-        
-        private readonly int _kochdauer;
+        private int _index;
 
-        public Kochautomatik(int dauer)
+        public Kochautomatik(Kochprogramm kochprogramm)
         {
-            _kochdauer = dauer;
+            _kochprogramm = kochprogramm;
 
-            Console.WriteLine($"Kochdauer {_kochdauer} min");
+            Console.WriteLine($"Kochdauer {_kochprogramm.Kochdauer} min");
 
             _machine = new StateMachine<State, Trigger>(() => _state, s => _state = s);
 
-            _setHopfengabeTrigger = _machine.SetTriggerParameters<int>(Trigger.HopfengabeStart);
-
             _machine.Configure(State.Aus)
+                .OnEntryFrom(Trigger.KochenBeendet, OnKochenBeendet)
                 .Permit(Trigger.VorderwürzeGegeben, State.Vorderwürze)
                 .Permit(Trigger.KochenStart, State.KochenAufheizen);
 
@@ -60,8 +59,8 @@ namespace Brauknecht
                 .Permit(Trigger.HopfengabeStart, State.Hopfengabe);
 
             _machine.Configure(State.Hopfengabe)
-                .OnEntryFrom(_setHopfengabeTrigger, OnHopfengabe, "Kochdauer Hopfengabe")
-                .OnExit(OnHopfengabeExit)
+                .OnEntry(() => OnHopfengabe(_index))
+                .OnExit(() => OnHopfengabeExit(_index++))
                 .Permit(Trigger.HopfengabeErreicht, State.Kochen)
                 .Permit(Trigger.KochenBeendet, State.Aus);
 
@@ -103,17 +102,18 @@ namespace Brauknecht
 
         private void OnKochtemperaturErreicht()
         {
-            Console.WriteLine($"Kochtemperatur erreicht! {_kochdauer} min ab jetzt...");
+            Console.WriteLine($"Kochtemperatur erreicht! {_kochprogramm.Kochdauer} min ab jetzt...");
         }
 
-        public void Hopfengabe(int kochdauer)
+        public void Hopfengabe()
         {
-            _machine.Fire(_setHopfengabeTrigger, kochdauer);
+            _machine.Fire(Trigger.HopfengabeStart);
         }
 
-        private void OnHopfengabe(int dauer)
+        private void OnHopfengabe(int index)
         {
-            Console.WriteLine($"Hopfengabe bei {_kochdauer - dauer} min...");
+            var dauer = _kochprogramm.Hopfengaben[index].Kochdauer;
+            Console.WriteLine($"Hopfengabe bei {_kochprogramm.Kochdauer - dauer} min...");
         }
 
         public void HopengabeErreicht()
@@ -121,16 +121,21 @@ namespace Brauknecht
             _machine.Fire(Trigger.HopfengabeErreicht);
         }
 
-        private void OnHopfengabeExit()
+        private void OnHopfengabeExit(int index)
         {
-            Console.WriteLine("Hopfengabe!");
+            Console.WriteLine($"Hopfen ({_kochprogramm.Hopfengaben[index].Name}) rein!");
         }
 
         public void KochEndeErreicht()
         {
             _machine.Fire(Trigger.KochenBeendet);
         }
-        
+
+        private void OnKochenBeendet()
+        {
+            Console.WriteLine("Kochen beendet");
+        }
+
         public string ToDotGraph()
         {
             return UmlDotGraph.Format(_machine.GetInfo());
