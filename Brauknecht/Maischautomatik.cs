@@ -25,8 +25,7 @@ namespace Brauknecht
             RastAufheizen,
             RastWarten,
             RastFertig,
-            AbmaischenAufheizen,
-            AbmaischenFertig
+            AbmaischenAufheizen
         }
 
         private State _state = State.Aus;
@@ -78,15 +77,12 @@ namespace Brauknecht
                 .OnEntryFrom(_setAbmaischenTrigger, temp => OnAbmaischenAufheizen(temp),
                     "Abmaischtemperatur")
                 .OnEntry(OnAbmaischenAufheizen)
-                .Permit(Trigger.AbmaischTemperaturErreicht, State.AbmaischenFertig);
+                .OnExit(OnAbmaischenFertig)
+                .Permit(Trigger.AbmaischTemperaturErreicht, State.Aus);
 
-            _machine.Configure(State.AbmaischenFertig)
-                .OnEntry(OnAbmaischenFertig)
-                .Permit(Trigger.EinmaischenStart, State.EinmaischenAufheizen);
-
-            // _machine.OnTransitioned(t =>
-            //     Console.WriteLine(
-            //         $"OnTransitioned: {t.Source} -> {t.Destination} via {t.Trigger}({string.Join(", ", t.Parameters)})"));
+            _machine.OnTransitioned(t =>
+                Console.WriteLine(
+                    $"OnTransitioned: {t.Source} -> {t.Destination} via {t.Trigger}({string.Join(", ", t.Parameters)})"));
         }
         
         // Einmaischen
