@@ -1,4 +1,4 @@
-namespace Brauknecht
+namespace BrauknechtStateless
 {
     public class Maischprogramm
     {

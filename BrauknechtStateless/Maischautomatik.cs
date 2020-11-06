@@ -1,12 +1,13 @@
-using System;
+using Microsoft.Extensions.Logging;
 using Stateless;
 using Stateless.Graph;
 
-namespace Brauknecht
+namespace BrauknechtStateless
 {
     public class Maischautomatik
     {
-        private readonly Maischprogramm _maischprogramm;
+        private Maischprogramm _prg;
+        private readonly ILogger _logger;
 
         private enum Trigger
         {
@@ -19,10 +20,11 @@ namespace Brauknecht
             AbmaischTemperaturErreicht
         }
 
-        private enum State
+        public enum State
         {
             Aus,
             EinmaischenAufheizen,
+            EinmaischenFertig,
             RastAufheizen,
             RastWarten,
             RastFertig,
@@ -30,15 +32,20 @@ namespace Brauknecht
         }
 
         private State _state = State.Aus;
-        readonly StateMachine<State, Trigger> _machine;
-
+        private readonly StateMachine<State, Trigger> _machine;
+        
+        public State CurrentState => _state;
+        public double TempSoll => _tempSoll;
         private double _tempSoll;
+
+        public int DauerSoll => _dauerSoll;
         private int _dauerSoll;
         private int _index;
+        
 
-        public Maischautomatik(Maischprogramm maischprogramm)
+        public Maischautomatik(ILogger<Maischautomatik> logger)
         {
-            _maischprogramm = maischprogramm;
+            _logger = logger;
 
             _machine = new StateMachine<State, Trigger>(() => _state, s => _state = s);
 
@@ -47,12 +54,14 @@ namespace Brauknecht
 
             _machine.Configure(State.EinmaischenAufheizen)
                 .OnEntry(OnEinmaischenAufheizen)
-                .OnExit(OnEinmaischenFertig)
-                .Permit(Trigger.EinmaischenTemperaturErreicht, State.RastAufheizen);
+                .Permit(Trigger.EinmaischenTemperaturErreicht, State.EinmaischenFertig);
 
+            _machine.Configure(State.EinmaischenFertig)
+                .OnEntry(OnEinmaischenFertig)
+                .Permit(Trigger.RastAufheizenStart, State.RastAufheizen);
+                
             _machine.Configure(State.RastAufheizen)
                 .OnEntry(() => OnRast(_index++))
-                .Ignore(Trigger.RastAufheizenStart)
                 .Permit(Trigger.RastTemperaturErreicht, State.RastWarten);
 
             _machine.Configure(State.RastWarten)
@@ -69,9 +78,15 @@ namespace Brauknecht
                 .OnExit(OnAbmaischenFertig)
                 .Permit(Trigger.AbmaischTemperaturErreicht, State.Aus);
 
-            // _machine.OnTransitioned(t =>
-            //     Console.WriteLine(
-            //         $"OnTransitioned: {t.Source} -> {t.Destination} via {t.Trigger}({string.Join(", ", t.Parameters)})"));
+            _machine.OnTransitioned(t => 
+                _logger.LogDebug(
+                    $"OnTransitioned: {t.Source} -> {t.Destination} via {t.Trigger}({string.Join(", ", t.Parameters)})"));
+        }
+
+        public Maischprogramm Prg
+        {
+            get => _prg;
+            set => _prg = value;
         }
 
         // Einmaischen
@@ -82,8 +97,9 @@ namespace Brauknecht
 
         private void OnEinmaischenAufheizen()
         {
-            _tempSoll = _maischprogramm.EinmaischTemperatur;
-            Console.WriteLine($"Setze Einmaischen auf {_tempSoll}°C");
+            _tempSoll = _prg.EinmaischTemperatur;
+            _dauerSoll = 0;
+            _logger.LogInformation($"Setze Einmaischen auf {_tempSoll}°C");
         }
 
         public void EinmaischenTemperaturErreicht()
@@ -93,7 +109,7 @@ namespace Brauknecht
 
         private void OnEinmaischenFertig()
         {
-            Console.WriteLine("Eingemaischt!");
+            _logger.LogInformation("Eingemaischt!");
         }
 
 
@@ -105,9 +121,9 @@ namespace Brauknecht
 
         private void OnRast(int index)
         {
-            _tempSoll = _maischprogramm.Rasten[index].Temperatur;
-            _dauerSoll = _maischprogramm.Rasten[index].Dauer;
-            Console.WriteLine($"Definiere Rast: {_tempSoll}°C, {_dauerSoll} min");
+            _tempSoll = _prg.Rasten[index].Temperatur;
+            _dauerSoll = _prg.Rasten[index].Dauer;
+            _logger.LogInformation($"Definiere Rast: {_tempSoll}°C, {_dauerSoll} min");
         }
 
         public void RastTemperaturErreicht()
@@ -117,7 +133,7 @@ namespace Brauknecht
 
         private void OnRastWarten()
         {
-            Console.WriteLine($"Rasttemperatur erreicht. Nun wird {_dauerSoll} min gewartet...");
+            _logger.LogInformation($"Rasttemperatur erreicht. Nun wird {_dauerSoll} min gewartet...");
         }
 
         public void RastWartenErreicht()
@@ -127,7 +143,7 @@ namespace Brauknecht
 
         private void OnRastFertig()
         {
-            Console.WriteLine("Rastdauer erreicht. Rast fertig!");
+            _logger.LogInformation("Rastdauer erreicht. Rast fertig!");
         }
 
         //
@@ -141,8 +157,9 @@ namespace Brauknecht
 
         private void OnAbmaischenAufheizen()
         {
-            _tempSoll = _maischprogramm.Abmaischtemperatur;
-            Console.WriteLine($"Setze Abmaischen auf {_tempSoll}°C");
+            _tempSoll = _prg.Abmaischtemperatur;
+            _dauerSoll = 0;
+            _logger.LogInformation($"Setze Abmaischen auf {_tempSoll}°C");
         }
 
         public void AbmaischTemperaturErreicht()
@@ -152,7 +169,8 @@ namespace Brauknecht
 
         private void OnAbmaischenFertig()
         {
-            Console.WriteLine("Abmaischen fertig!");
+            _tempSoll = 0;
+            _logger.LogInformation("Abmaischen fertig!");
         }
 
         public string ToDotGraph()

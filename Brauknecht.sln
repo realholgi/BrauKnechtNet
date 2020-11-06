@@ -2,6 +2,10 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BrauknechtStetelessSpike", "BrauknechtStetelessSpike\BrauknechtStetelessSpike.csproj", "{6F5FB53E-52FC-410C-A58B-E9F93C6C6071}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BrauknechtStatelessTests", "BrauknechtStatelessTests\BrauknechtStatelessTests.csproj", "{515CFBF4-704A-47A8-B5F5-20A8ECAA73B9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BrauknechtStateless", "BrauknechtStateless\BrauknechtStateless.csproj", "{213284A5-BA38-40CC-A414-6AEEB4A4146B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +16,13 @@ Global
 		{6F5FB53E-52FC-410C-A58B-E9F93C6C6071}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6F5FB53E-52FC-410C-A58B-E9F93C6C6071}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6F5FB53E-52FC-410C-A58B-E9F93C6C6071}.Release|Any CPU.Build.0 = Release|Any CPU
+		{515CFBF4-704A-47A8-B5F5-20A8ECAA73B9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{515CFBF4-704A-47A8-B5F5-20A8ECAA73B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{515CFBF4-704A-47A8-B5F5-20A8ECAA73B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{515CFBF4-704A-47A8-B5F5-20A8ECAA73B9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{213284A5-BA38-40CC-A414-6AEEB4A4146B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{213284A5-BA38-40CC-A414-6AEEB4A4146B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{213284A5-BA38-40CC-A414-6AEEB4A4146B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{213284A5-BA38-40CC-A414-6AEEB4A4146B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
