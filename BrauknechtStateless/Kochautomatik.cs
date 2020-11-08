@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Logging;
+using BrauknechtStateless.PrgData;
 using Stateless;
 using Stateless.Graph;
 
@@ -6,8 +6,9 @@ namespace BrauknechtStateless
 {
     public class Kochautomatik
     {
-        private Kochprogramm _prg;
-        private readonly ILogger<Kochautomatik> _logger;
+        private readonly Kochprogramm _prg;
+
+        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
         private enum Trigger
         {
@@ -35,9 +36,9 @@ namespace BrauknechtStateless
         private readonly StateMachine<State, Trigger> _machine;
         private int _index;
 
-        public Kochautomatik(ILogger<Kochautomatik> logger)
+        public Kochautomatik(Kochprogramm prg)
         {
-            _logger = logger;
+            _prg = prg;
 
             _machine = new StateMachine<State, Trigger>(() => _state, s => _state = s);
 
@@ -66,28 +67,22 @@ namespace BrauknechtStateless
             _machine.Configure(State.HopfengabeWarten)
                 .OnEntry(() => OnHopfengabe(_index))
                 .Permit(Trigger.HopfengabeErreicht, State.HopfenGeben);
-            
+
             _machine.Configure(State.HopfenGeben)
                 .OnExit(() => OnHopfengegeben(_index++))
                 .Permit(Trigger.HopfengabeWartenStart, State.HopfengabeWarten)
                 .Permit(Trigger.KochenStart, State.Kochen)
                 .Permit(Trigger.KochenBeendet, State.Aus);
-            
-            _machine.OnTransitioned(t => _logger.LogDebug(
+
+            _machine.OnTransitioned(t => Logger.Debug(
                 $"OnTransitioned: {t.Source} -> {t.Destination} via {t.Trigger}({string.Join(", ", t.Parameters)})"));
         }
 
         private void OnStartKochautomatik()
         {
-            _logger.LogInformation($"Kochdauer {_prg.Kochdauer} min");
+            Logger.Info($"Kochdauer {_prg.Kochdauer} min");
         }
 
-        public Kochprogramm Prg
-        {
-            get => _prg;
-            set => _prg = value;
-        }
-        
         public void VorderwürzeHopfungGegeben()
         {
             _machine.Fire(Trigger.VorderwürzeGegeben);
@@ -95,13 +90,13 @@ namespace BrauknechtStateless
 
         private void OnVorderwürzegabe()
         {
-            _logger.LogInformation("Vorderwürzegabe rein!");
+            Logger.Info("Vorderwürzegabe rein!");
         }
 
         private void OnKochenAufheizen()
         {
             // ReSharper disable once StringLiteralTypo
-            _logger.LogInformation("Aufheizing...");
+            Logger.Info("Aufheizing...");
         }
 
         public void KochTemperaturErreicht()
@@ -116,12 +111,12 @@ namespace BrauknechtStateless
 
         private void OnKochen()
         {
-            _logger.LogInformation("Kochen...");
+            Logger.Info("Kochen...");
         }
 
         private void OnKochtemperaturErreicht()
         {
-            _logger.LogInformation($"Kochtemperatur erreicht! {_prg.Kochdauer} min ab jetzt...");
+            Logger.Info($"Kochtemperatur erreicht! {_prg.Kochdauer} min ab jetzt...");
         }
 
         public void Hopfengabe()
@@ -132,7 +127,7 @@ namespace BrauknechtStateless
         private void OnHopfengabe(int index)
         {
             var dauer = _prg.Hopfengaben[index].Kochdauer;
-            _logger.LogInformation($"Hopfengabe bei {_prg.Kochdauer - dauer} min...");
+            Logger.Info($"Hopfengabe bei {_prg.Kochdauer - dauer} min...");
         }
 
         public void HopengabeErreicht()
@@ -142,7 +137,7 @@ namespace BrauknechtStateless
 
         private void OnHopfengegeben(int index)
         {
-            _logger.LogInformation($"Hopfen ({_prg.Hopfengaben[index].Name}) rein!");
+            Logger.Info($"Hopfen ({_prg.Hopfengaben[index].Name}) rein!");
         }
 
         public void KochEndeErreicht()
@@ -152,7 +147,7 @@ namespace BrauknechtStateless
 
         private void OnKochenBeendet()
         {
-            _logger.LogInformation("Kochen beendet");
+            Logger.Info("Kochen beendet");
         }
 
         public string ToDotGraph()

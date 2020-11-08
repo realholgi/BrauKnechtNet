@@ -1,14 +1,11 @@
 using BrauknechtStateless;
-using Microsoft.Extensions.Logging;
-using Moq;
+using BrauknechtStateless.PrgData;
 using Xunit;
 
 namespace BrauknechtStatelessTests
 {
     public class MaischautomatikTests
     {
-        private readonly ILogger<Maischautomatik> _logger = Mock.Of<ILogger<Maischautomatik>>();
-
         private Maischprogramm _prg;
 
         private Maischautomatik CreateTestMaischautomatik()
@@ -22,7 +19,7 @@ namespace BrauknechtStatelessTests
                     new Rast(72, 30)
                 }
             };
-            return new Maischautomatik(_logger) {Prg = _prg};
+            return new Maischautomatik(_prg);
         }
 
         [Fact]

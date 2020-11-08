@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Logging;
+using BrauknechtStateless.PrgData;
 using Stateless;
 using Stateless.Graph;
 
@@ -6,9 +6,10 @@ namespace BrauknechtStateless
 {
     public class Maischautomatik
     {
-        private Maischprogramm _prg;
-        private readonly ILogger _logger;
-
+        private readonly Maischprogramm _prg;
+        
+        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+        
         private enum Trigger
         {
             EinmaischenStart,
@@ -41,11 +42,10 @@ namespace BrauknechtStateless
         public int DauerSoll => _dauerSoll;
         private int _dauerSoll;
         private int _index;
-        
 
-        public Maischautomatik(ILogger<Maischautomatik> logger)
+        public Maischautomatik(Maischprogramm prg)
         {
-            _logger = logger;
+            _prg = prg;
 
             _machine = new StateMachine<State, Trigger>(() => _state, s => _state = s);
 
@@ -79,14 +79,8 @@ namespace BrauknechtStateless
                 .Permit(Trigger.AbmaischTemperaturErreicht, State.Aus);
 
             _machine.OnTransitioned(t => 
-                _logger.LogDebug(
+                Logger.Debug(
                     $"OnTransitioned: {t.Source} -> {t.Destination} via {t.Trigger}({string.Join(", ", t.Parameters)})"));
-        }
-
-        public Maischprogramm Prg
-        {
-            get => _prg;
-            set => _prg = value;
         }
 
         // Einmaischen
@@ -99,7 +93,7 @@ namespace BrauknechtStateless
         {
             _tempSoll = _prg.EinmaischTemperatur;
             _dauerSoll = 0;
-            _logger.LogInformation($"Setze Einmaischen auf {_tempSoll}°C");
+            Logger.Info($"Setze Einmaischen auf {_tempSoll}°C");
         }
 
         public void EinmaischenTemperaturErreicht()
@@ -109,7 +103,7 @@ namespace BrauknechtStateless
 
         private void OnEinmaischenFertig()
         {
-            _logger.LogInformation("Eingemaischt!");
+            Logger.Info("Eingemaischt!");
         }
 
 
@@ -123,7 +117,7 @@ namespace BrauknechtStateless
         {
             _tempSoll = _prg.Rasten[index].Temperatur;
             _dauerSoll = _prg.Rasten[index].Dauer;
-            _logger.LogInformation($"Definiere Rast: {_tempSoll}°C, {_dauerSoll} min");
+            Logger.Info($"Definiere Rast: {_tempSoll}°C, {_dauerSoll} min");
         }
 
         public void RastTemperaturErreicht()
@@ -133,7 +127,7 @@ namespace BrauknechtStateless
 
         private void OnRastWarten()
         {
-            _logger.LogInformation($"Rasttemperatur erreicht. Nun wird {_dauerSoll} min gewartet...");
+            Logger.Info($"Rasttemperatur erreicht. Nun wird {_dauerSoll} min gewartet...");
         }
 
         public void RastWartenErreicht()
@@ -143,7 +137,7 @@ namespace BrauknechtStateless
 
         private void OnRastFertig()
         {
-            _logger.LogInformation("Rastdauer erreicht. Rast fertig!");
+            Logger.Info("Rastdauer erreicht. Rast fertig!");
         }
 
         //
@@ -159,7 +153,7 @@ namespace BrauknechtStateless
         {
             _tempSoll = _prg.Abmaischtemperatur;
             _dauerSoll = 0;
-            _logger.LogInformation($"Setze Abmaischen auf {_tempSoll}°C");
+            Logger.Info($"Setze Abmaischen auf {_tempSoll}°C");
         }
 
         public void AbmaischTemperaturErreicht()
@@ -170,7 +164,7 @@ namespace BrauknechtStateless
         private void OnAbmaischenFertig()
         {
             _tempSoll = 0;
-            _logger.LogInformation("Abmaischen fertig!");
+            Logger.Info("Abmaischen fertig!");
         }
 
         public string ToDotGraph()

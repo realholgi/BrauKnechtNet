@@ -1,4 +1,4 @@
-namespace BrauknechtStateless
+namespace BrauknechtStateless.PrgData
 {
     public class Maischprogramm
     {

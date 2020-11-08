@@ -1,32 +1,26 @@
 using BrauknechtStateless;
+using BrauknechtStateless.PrgData;
 
 namespace BrauknechtStatelessSpike
 {
-    public class MaischautomatikRunner
+    public static class MaischautomatikRunner
     {
-        private readonly Maischautomatik _m;
-
-        public MaischautomatikRunner(Maischautomatik m)
+        public static void Run(Maischprogramm prg)
         {
-            _m = m;
-        }
-
-        public void Run(Maischprogramm prg)
-        {
-            _m.Prg = prg;
-
-            _m.Einmaischen();
-            _m.EinmaischenTemperaturErreicht();
+            var m = new Maischautomatik(prg);
+            
+            m.Einmaischen();
+            m.EinmaischenTemperaturErreicht();
 
             foreach (var _ in prg.Rasten)
             {
-                _m.Rasten();
-                _m.RastTemperaturErreicht();
-                _m.RastWartenErreicht();
+                m.Rasten();
+                m.RastTemperaturErreicht();
+                m.RastWartenErreicht();
             }
 
-            _m.Abmaischen();
-            _m.AbmaischTemperaturErreicht();
+            m.Abmaischen();
+            m.AbmaischTemperaturErreicht();
 
             // Console.WriteLine(_maischautomatik.ToDotGraph());
         }

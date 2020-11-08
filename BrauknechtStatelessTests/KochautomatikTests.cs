@@ -1,14 +1,11 @@
 using BrauknechtStateless;
-using Microsoft.Extensions.Logging;
-using Moq;
+using BrauknechtStateless.PrgData;
 using Xunit;
 
 namespace BrauknechtStatelessTests
 {
     public class KochautomatikTests
     {
-        private readonly ILogger<Kochautomatik> _logger = Mock.Of<ILogger<Kochautomatik>>();
-        
         private Kochprogramm _prg;
         
         private Kochautomatik CreateTestKochautomatik()
@@ -23,7 +20,7 @@ namespace BrauknechtStatelessTests
                     new Hopfengabe("Simcoe", 5)
                 }
             };
-            return new Kochautomatik(_logger) {Prg = _prg};
+            return new Kochautomatik(_prg);
         }
         
         [Fact]

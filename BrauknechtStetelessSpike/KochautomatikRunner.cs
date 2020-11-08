@@ -1,31 +1,25 @@
 using BrauknechtStateless;
+using BrauknechtStateless.PrgData;
 
 namespace BrauknechtStatelessSpike
 {
-    public class KochautomatikRunner
+    public static class KochautomatikRunner
     {
-        private readonly Kochautomatik _k;
-
-        public KochautomatikRunner(Kochautomatik k)
+        public static void Run(Kochprogramm prg)
         {
-            _k = k;
-        }
-
-        public void Run(Kochprogramm prg)
-        {
-            _k.Prg = prg;
+            var k = new Kochautomatik(prg);
             
-            _k.VorderwürzeHopfungGegeben();
-            _k.Kochen();
-            _k.KochTemperaturErreicht();
+            k.VorderwürzeHopfungGegeben();
+            k.Kochen();
+            k.KochTemperaturErreicht();
 
             foreach (var _ in prg.Hopfengaben)
             {
-                _k.Hopfengabe();
-                _k.HopengabeErreicht();
+                k.Hopfengabe();
+                k.HopengabeErreicht();
             }
 
-            _k.KochEndeErreicht();
+            k.KochEndeErreicht();
 
             //Console.WriteLine(k.ToDotGraph());
         }

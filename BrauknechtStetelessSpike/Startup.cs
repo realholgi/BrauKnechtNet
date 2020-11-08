@@ -1,12 +1,8 @@
-﻿using System;
-using BrauknechtStateless;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using NLog.Extensions.Logging;
+﻿using BrauknechtStateless.PrgData;
 
 namespace BrauknechtStatelessSpike
 {
-    class Startup
+    static class Startup
     {
         private static readonly Maischprogramm M = new Maischprogramm
         {
@@ -31,27 +27,8 @@ namespace BrauknechtStatelessSpike
         
         static void Main(string[] args)
         {
-            var config = new ConfigurationBuilder().Build();
-            var servicesProvider =  RegisterServices(config);
-            using (servicesProvider as IDisposable)
-            {
-                servicesProvider.GetRequiredService<MaischautomatikRunner>().Run(M);
-                servicesProvider.GetRequiredService<KochautomatikRunner>().Run(K);
-            }
-        }
-        
-        private static IServiceProvider RegisterServices(IConfiguration config)
-        {
-            return new ServiceCollection()
-                .AddTransient<Maischautomatik>()
-                .AddTransient<Kochautomatik>()
-                .AddTransient<MaischautomatikRunner>()
-                .AddTransient<KochautomatikRunner>()
-                .AddLogging(loggingBuilder =>
-                {
-                    loggingBuilder.AddNLog(config);
-                })
-                .BuildServiceProvider(true);
+            MaischautomatikRunner.Run(M);
+            KochautomatikRunner.Run(K);
         }
     }
 }
