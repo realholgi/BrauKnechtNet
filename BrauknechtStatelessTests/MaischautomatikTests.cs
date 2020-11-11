@@ -6,7 +6,7 @@ namespace BrauknechtStatelessTests
 {
     public class MaischautomatikTests
     {
-        private Maischprogramm _prg;
+        private Maischprogramm _prg = new Maischprogramm();
 
         private Maischautomatik CreateTestMaischautomatik()
         {

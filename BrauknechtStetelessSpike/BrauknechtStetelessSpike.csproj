@@ -1,10 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>netcoreapp3.1</TargetFramework>
+        <TargetFramework>netcoreapp5.0</TargetFramework>
         <OutputType>Exe</OutputType>
         <AssemblyName>BrauknechtStatelessSpike</AssemblyName>
         <RootNamespace>BrauknechtStatelessSpike</RootNamespace>
+        <LangVersion>9</LangVersion>
+        <Nullable>enable</Nullable>
     </PropertyGroup>
 
     <ItemGroup>

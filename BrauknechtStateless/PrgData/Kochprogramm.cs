@@ -3,7 +3,7 @@ namespace BrauknechtStateless.PrgData
     public class Kochprogramm
     {
         public int Kochdauer;
-        public Hopfengabe[] Hopfengaben = new Hopfengabe[0];
+        public Hopfengabe[] Hopfengaben = System.Array.Empty<Hopfengabe>();
     }
 
     public class Hopfengabe
@@ -17,4 +17,6 @@ namespace BrauknechtStateless.PrgData
             Kochdauer = kochdauer;
         }
     }
+    
+    
 }

@@ -3,7 +3,7 @@ namespace BrauknechtStateless.PrgData
     public class Maischprogramm
     {
         public double EinmaischTemperatur;
-        public Rast[] Rasten = new Rast[0];
+        public Rast[] Rasten = System.Array.Empty<Rast>();
         public double Abmaischtemperatur = 78;
     }
 
