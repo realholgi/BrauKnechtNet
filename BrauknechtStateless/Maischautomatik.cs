@@ -43,6 +43,8 @@ namespace BrauknechtStateless
         private int _dauerSoll;
         private int _index;
 
+        public int RastAnzahl => _prg.Rasten.Length;
+
         public Maischautomatik(Maischprogramm prg)
         {
             _prg = prg;

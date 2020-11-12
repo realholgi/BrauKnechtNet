@@ -7,7 +7,8 @@ namespace BrauknechtStatelessTests
     public class KochautomatikTests
     {
         private Kochprogramm _prg = new Kochprogramm();
-        
+
+
         private Kochautomatik CreateTestKochautomatik()
         {
             _prg = new Kochprogramm

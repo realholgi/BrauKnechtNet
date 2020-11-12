@@ -1,22 +1,18 @@
 namespace BrauknechtStateless.PrgData
 {
-    public class Kochprogramm
+    public record Kochprogramm
     {
-        public int Kochdauer;
-        public Hopfengabe[] Hopfengaben = System.Array.Empty<Hopfengabe>();
+        public int Kochdauer { get; init; }
+        public Hopfengabe[] Hopfengaben { get; init; } = System.Array.Empty<Hopfengabe>();
     }
 
-    public class Hopfengabe
-    {
-        public readonly string Name;
-        public readonly int Kochdauer;
 
-        public Hopfengabe(string name, int kochdauer)
-        {
-            Name = name;
-            Kochdauer = kochdauer;
-        }
+    public record Hopfengabe
+    {
+        public string Name { get; private init; } = "<unbekannt>";
+        public int Kochdauer { get; private init; }
+
+        public Hopfengabe(string name, int kochdauer) => (Name, Kochdauer) = (name, kochdauer);
+        public Hopfengabe(int kochdauer) => Kochdauer = kochdauer;
     }
-    
-    
 }

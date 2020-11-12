@@ -1,21 +1,19 @@
 namespace BrauknechtStateless.PrgData
 {
-    public class Maischprogramm
+    public record Maischprogramm
     {
-        public double EinmaischTemperatur;
-        public Rast[] Rasten = System.Array.Empty<Rast>();
-        public double Abmaischtemperatur = 78;
+        public double EinmaischTemperatur { get; init; }
+        public Rast[] Rasten { get; init; } = System.Array.Empty<Rast>();
+        public double Abmaischtemperatur { get; init; } = 78;
     }
 
-    public class Rast
+    public record Rast
     {
-        public readonly double Temperatur;
-        public readonly int Dauer;
+        public string Name { get; private init; } = "<unbekannt>";
+        public double Temperatur { get; private init; }
+        public int Dauer { get; private init; }
 
-        public Rast(double temp, int dauer)
-        {
-            Temperatur = temp;
-            Dauer = dauer;
-        }
+        public Rast(string name, double temp, int dauer) => (Name, Temperatur, Dauer) = (name, temp, dauer);
+        public Rast(double temp, int dauer) => (Temperatur, Dauer) = (temp, dauer);
     }
 }
