@@ -2,4 +2,4 @@
 
 Brew Automation with .Net Core
 
-Pictures and description in German at https://holgi.beer/blog/category/brau-geraetschaft/
+Pictures and description in German athttps://holgi.beer/tags/brau-ger%C3%A4tschaft/
